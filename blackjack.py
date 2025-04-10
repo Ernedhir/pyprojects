@@ -62,28 +62,30 @@ while True:
             if move == 'double':
                 sel = select_random_card("ME")
                 print(f"Your new card: {sel[0]} of {sel[1]}. Total: {HandSum}")
-                if HandSum == 21:
-                    if AISum != 17:
-                        while True:
-                            if AISum <= HandSum:
-                                sel = select_random_card()
-                                AI.append({sel[0]: sel[1]})
-                                AISum+=sel[2]
-                                print(f"Dealer's turn: {sel[0]} of {sel[1]}")
-                                time.sleep(1.2)
+                while True:
+                    if HandSum == 21:
+                        if AISum != 17:
+                            while True:
+                                if AISum <= HandSum:
+                                    sel = select_random_card()
+                                    AI.append({sel[0]: sel[1]})
+                                    AISum+=sel[2]
+                                    print(f"Dealer's turn: {sel[0]} of {sel[1]}")
+                                    time.sleep(1.2)
+                                else:
+                                    break
+                            if AISum == HandSum:
+                                print("Push!")
                             else:
-                                break
-                        if AISum == HandSum:
-                            print("Push!")
+                                print(f"Dealer busted, you won! ({AISum})")
+                            break
                         else:
-                            print("Dealer busted, you won! ({AISum})")
+                            print(f"You won with BJ in your hand! AI Had {AISum}")
+                            break
+                    elif HandSum > 21:
+                        print("You busted! "+ str(HandSum))
                         break
-                    else:
-                        print("You won with BJ in your hand! AI Had {AISum}")
-                        break
-                elif HandSum > 21:
-                    print("You busted! "+ str(HandSum))
-                    break
+                break
             elif move == "hit":
                 sel = select_random_card()
                 Hand.append({sel[0]: sel[1]})
@@ -103,10 +105,10 @@ while True:
                         if AISum == HandSum:
                             print("Push!")
                         else:
-                            print("Dealer busted, you won! ({AISum})")
+                            print(f"Dealer busted, you won! ({AISum})")
                         break
                     else:
-                        print("You won with BJ in your hand! AI Had {AISum}")
+                        print(f"You won with BJ in your hand! AI Had {AISum}")
                         break
                 elif HandSum > 21:
                     print("You busted! "+ str(HandSum))
