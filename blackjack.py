@@ -19,6 +19,8 @@ def select_random_card(who=None): # Selects a random card from given deck and as
     elif who == "AI":
         AI.append({sel_deck: sel_card})
         AISum += index
+    else:
+        raise TypeError("Please specify a person")
     return [sel_deck, sel_card, index]
 
 def initilaziaton(): # Initializes the game. 
@@ -31,9 +33,10 @@ def initilaziaton(): # Initializes the game.
         i+=1
         if i % 2 != 0: select_random_card("ME")
         else: select_random_card("AI")
-    print(HandSum, Hand)
-    print(AISum, AI)
+#    print(HandSum, Hand)
+#    print(AISum, AI)
     print(f"Initilaziaton finished!\nDealer's Hand is: {str(list(AI[0]))[2:-2]} of {str(list(AI[0].values()))[1:-1]} and ?\nYour Hand is: {str(list(Hand[0]))[2:-2]} of {str(list(Hand[0].values()))[1:-1]} and {str(list(Hand[1]))[2:-2]} of {str(list(Hand[1].values()))[1:-1]} ({HandSum})")
+    time.sleep(1)
 
 def comp(arg1, arg2): # Compares two given integer. Not very needed but meh.
     if type(arg1) is not int or type(arg2) is not int: raise TypeError(f"bruh u gotta compare between to integers not {type(arg1)} or {type(arg2)}")
@@ -76,8 +79,10 @@ while True:
                                     break
                             if AISum == HandSum:
                                 print("Push!")
+                                break
                             else:
                                 print(f"Dealer busted, you won! ({AISum})")
+                                break
                             break
                         else:
                             print(f"You won with BJ in your hand! AI Had {AISum}")
@@ -85,6 +90,26 @@ while True:
                     elif HandSum > 21:
                         print("You busted! "+ str(HandSum))
                         break
+                    else:
+                        if AISum != 17:
+                            while True:
+                                if AISum <= HandSum:
+                                    sel = select_random_card()
+                                    AI.append({sel[0]: sel[1]})
+                                    AISum+=sel[2]
+                                    print(f"Dealer's turn: {sel[0]} of {sel[1]}")
+                                    time.sleep(1.2)
+                                else:
+                                    break
+                            if AISum == HandSum:
+                                print("Push!")
+                                break
+                            elif AISum >= HandSum:
+                                print(f"Dealer won! ({AISum})")
+                                break
+                            else:
+                                print(f"Dealer busted, you won! ({AISum})")
+                            break
                 break
             elif move == "hit":
                 sel = select_random_card()
