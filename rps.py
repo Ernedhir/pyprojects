@@ -6,7 +6,6 @@ moves = ["Rock", "Paper", "Scissor"]
 def init():
     global selAI
     selAI = random.choice(moves)
-    print(selAI)
     time.sleep(1)
 
 def y():
