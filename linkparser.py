@@ -12,6 +12,7 @@ Designed to help organize, clean, and prepare link data for sharing and archival
 (e.g. Discord messages, personal backups, or external storage systems).
 """
 
+
 import sys
 import subprocess
 import os
@@ -19,7 +20,7 @@ import platform
 
 IS_WINDOWS = platform.system() == "Windows"
 
-def duplicate_remover(linklist): # ITS NOT OPTIMIZED YES I KNOW
+def duplicate_remover(linklist: list[str]) -> list[str]: # ITS NOT OPTIMIZED YES I KNOW
     tmplist = []
 
     for word in linklist:
@@ -27,20 +28,19 @@ def duplicate_remover(linklist): # ITS NOT OPTIMIZED YES I KNOW
             tmplist.append(word)
     return tmplist
 
-def remove_duplicate_from_file(fn: str): # ITS NOT OPTIMIZED YES I KNOW
+def remove_duplicate_from_file(fn: str) -> None: # ITS NOT OPTIMIZED YES I KNOW
     tmplist = []
 
     with open(fn, 'r', encoding='utf-8') as f:
         contents = f.read().splitlines()
-    for word in contents:
-        if word not in tmplist:
-            tmplist.append(word)
+
+    tmplist = duplicate_remover(contents)
 
     with open(fn, 'w', encoding='utf-8') as f:
         for word in tmplist:
             f.write(word + '\n')
 
-def makeline(links, sep='https://'):
+def makeline(links: str, sep:str = 'https://') -> None:
     i = 0
     output = ''
 
@@ -50,9 +50,11 @@ def makeline(links, sep='https://'):
             output += sep + p + '\n'
 
     print(i)
-    subprocess.run('clip', input=output, text=True)
+    if IS_WINDOWS: subprocess.run('clip', input=output, text=True)
+    #Assume user has xclip
+    else: subprocess.run('xclip', input=output, text=True)
 
-def message_maker(fn, limit=2000):
+def message_maker(fn: str, limit: int = 2000) -> None:
     contents = []
     os.makedirs("msgs", exist_ok=True)
 
@@ -72,7 +74,7 @@ def message_maker(fn, limit=2000):
 
         if len(candidate) < limit:
             chunk = candidate
-            print(f'Appended: {p} (at msg_{file_index}.txt ({len(chunk)}))')
+            # print(f'Appended: {p} (at msg_{file_index}.txt ({len(chunk)}))')
         else:
             filename = os.path.join('msgs', f'msg_{file_index}.txt')
             with open(filename, 'w', encoding='utf-8') as f:
@@ -87,7 +89,9 @@ def message_maker(fn, limit=2000):
             f.write(chunk)
         print(f'Wrote: {filename} ({len(chunk)})')
 
-def parse_message_args(args):
+
+
+def parse_message_args(args: list[str]) -> tuple[str, int]:
     limit = 4000
     file = None
 
@@ -96,14 +100,16 @@ def parse_message_args(args):
         if args[i] == '-l' or args[i] == '--limit':
             i += 1
             limit = int(args[i])
-            assert limit < 4000, "LIMIT EXCEEDED"
+            if limit > 4000:
+                print("ERROR: LIMIT EXCEEDED")
+                exit(1)
         else: file = args[i]
         i += 1
 
-    if file is None: raise ValueError("PROVIDE INPUT FILE")
+    if file is None: error_handler('inputfile')
     return file, limit
 
-def parse_line_args(args):
+def parse_line_args(args: list[str]) -> tuple[str, str]:
     sep = 'https://'
     file = None
 
@@ -115,29 +121,53 @@ def parse_line_args(args):
         else: file = args[i]
         i += 1
 
-    if file is None: raise ValueError("PROVIDE INPUT FILE")
+    if file is None: error_handler('inputfile')
     return file, sep
 
-usage = """USAGE:
-        \n    message <file> [--limit N] -  Extract all the links, split them into chunks (default 4000) and write them to \"msgs\" folder
-        \n    line <links> [--sep <SEPARATOR>] -  Form a readable string from a concatenated string. Custom separator can be added. (default 'https://')
-        \n    duplicate <file>                 -  Extract all the lines from a file, remove duplicates from them and rewrite the file."""
+def error_handler(check_type: str) -> None:
+    match check_type:
+        case 'args':
+            if len(sys.argv) < 2:
+                usage_exit("ERROR: Please provide a subcommand")
+            elif len(sys.argv) == 2:
+                usage_exit("ERROR: NOT ENOUGH ARGUMENTS.")
+        case 'notfound':
+            usage_exit(f"ERROR: SUBCOMMAND {sys.argv[1]} CANNOT BE FOUND")
+        case 'inputfile':
+            usage_exit("PROVIDE INPUT FILE")
+        case _:
+            unreachable()
 
-def main():
+def usage_exit(msg: str) -> None:
+    print(f"{msg}\n\n{usage}")
+    exit(1)
+
+def unreachable() -> None:
+    print('ERROR: unreachable')
+    exit(1)
+
+usage = f"""USAGE: {sys.argv[0]} <subcommand> <args>\
+        \n    message <file> [--limit N]       -  Extract all the links, split them into chunks (default 4000) and write them to \"./msgs\" folder\
+        \n    line <links> [--sep <SEPARATOR>] -  Form a readable string from a concatenated string. Custom separator can be added. (default 'https://')\
+        \n    duplicate <file>                 -  Extract all the lines from a file, remove duplicates from them and rewrite the file.\
+        \n    help                             -  Displays this help message."""
+
+def main() -> None:
+    error_handler('args')
     match sys.argv[1].lower():
         case 'line':
-            assert len(sys.argv) > 2, f"ERROR: NOT ENOUGH ARGUMENTS.\n{usage}"
             file_name, sep = parse_line_args(sys.argv[2:])
             makeline(file_name, sep)
         case 'message':
-            assert len(sys.argv) > 2, f"ERROR: NOT ENOUGH ARGUMENTS.\n{usage}"
             file_name, limit = parse_message_args(sys.argv[2:])
             message_maker(file_name, limit)
         case 'duplicate':
-            assert len(sys.argv) == 3, f"ERROR: PROVIDE INPUT FILE"
             remove_duplicate_from_file(sys.argv[2])
+        case 'help':
+            print(usage)
         case _:
-            print(f"ERROR: SUBCOMMAND ({sys.argv[1]}) CANNOT BE FOUND\n\n{usage}")
+            error_handler('notfound')
 
 if __name__ == '__main__':
     main()
+    exit(0)
